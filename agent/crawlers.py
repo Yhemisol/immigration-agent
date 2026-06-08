@@ -123,7 +123,7 @@ def crawl_sevp() -> list[RawItem]:
 # ---------------------------------------------------------------------------
 
 STATE_VISA_BULLETIN_URL = "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
-STATE_ALERTS_URL = "https://travel.state.gov/content/travel/en/News/visalaw.html"
+STATE_ALERTS_URL = "https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/visa-law-and-policy.html"
 
 
 def crawl_state_dept() -> list[RawItem]:
@@ -157,20 +157,22 @@ def crawl_state_dept() -> list[RawItem]:
 # Federal Register
 # ---------------------------------------------------------------------------
 
-FEDERAL_REGISTER_API = (
-    "https://www.federalregister.gov/api/v1/articles.json"
-    "?conditions[agencies][]=homeland-security"
-    "&conditions[agencies][]=state-department"
-    "&conditions[term]=visa+immigration"
-    "&order=newest"
-    "&per_page=20"
-    "&fields[]=title,abstract,html_url,publication_date,document_number"
-)
-
-# Also grab recent days
 def _fr_url_with_dates() -> str:
     cutoff = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d")
-    return FEDERAL_REGISTER_API + f"&conditions[publication_date][gte]={cutoff}"
+    return (
+        "https://www.federalregister.gov/api/v1/articles.json"
+        "?conditions%5Bagencies%5D%5B%5D=homeland-security"
+        "&conditions%5Bagencies%5D%5B%5D=state-department"
+        "&conditions%5Bterm%5D=visa+immigration"
+        "&order=newest"
+        "&per_page=20"
+        "&fields%5B%5D=title"
+        "&fields%5B%5D=abstract"
+        "&fields%5B%5D=html_url"
+        "&fields%5B%5D=publication_date"
+        "&fields%5B%5D=document_number"
+        f"&conditions%5Bpublication_date%5D%5Bgte%5D={cutoff}"
+    )
 
 
 def crawl_federal_register() -> list[RawItem]:

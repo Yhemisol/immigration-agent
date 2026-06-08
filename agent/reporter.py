@@ -124,12 +124,12 @@ def send_report(html_body: str, run_date: str, item_count: int) -> bool:
     msg["Subject"] = subject
     msg["From"] = gmail_user
     msg["To"] = gmail_to
-    msg.attach(MIMEText(html_body, "html"))
+    msg.attach(MIMEText(html_body, "html", "utf-8"))
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, app_password)
-            server.sendmail(gmail_user, gmail_to, msg.as_string())
+            server.sendmail(gmail_user, gmail_to, msg.as_bytes())
         logger.info("Report emailed to %s", gmail_to)
         return True
     except Exception as exc:
