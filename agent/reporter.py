@@ -2,8 +2,7 @@
 import logging
 import os
 import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 
 from .classifier import ClassifiedItem, VISA_CATEGORIES
 
@@ -73,27 +72,24 @@ def build_html_report(items: list[ClassifiedItem], run_date: str) -> str:
         f'<li><a href="{i.url}">{i.title}</a> - {i.source}</li>'
         for i in high_priority
     )
-    if high_priority_list:
-        high_priority_section = (
-            '<div style="background:#ffebee;border:1px solid #ef9a9a;border-radius:8px;padding:16px;margin-bottom:24px">'
-            f'<h3 style="color:#c62828;margin-top:0">HIGH PRIORITY UPDATES ({len(high_priority)})</h3>'
-            f'<ul>{high_priority_list}</ul>'
-            '</div>'
-        )
-    else:
-        high_priority_section = ""
+    high_priority_section = (
+        '<div style="background:#ffebee;border:1px solid #ef9a9a;border-radius:8px;padding:16px;margin-bottom:24px">'
+        f'<h3 style="color:#c62828;margin-top:0">HIGH PRIORITY UPDATES ({len(high_priority)})</h3>'
+        f'<ul>{high_priority_list}</ul>'
+        '</div>'
+    ) if high_priority_list else ""
 
     return (
         '<!DOCTYPE html><html>'
-        '<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        '<head><meta charset="UTF-8"></head>'
         '<body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:20px;color:#212121">'
-        '<div style="background:linear-gradient(135deg,#1a237e,#283593);color:#fff;padding:24px;border-radius:8px;margin-bottom:24px">'
+        '<div style="background:#1a237e;color:#fff;padding:24px;border-radius:8px;margin-bottom:24px">'
         '<h1 style="margin:0;font-size:22px">Immigration Intelligence Report</h1>'
-        f'<p style="margin:8px 0 0;opacity:0.85">{run_date} | {len(items)} new/updated items detected</p>'
+        f'<p style="margin:8px 0 0;opacity:0.85">{run_date} | {len(items)} new items detected</p>'
         '</div>'
         f'{high_priority_section}'
         '<div style="background:#e8eaf6;border-radius:8px;padding:16px;margin-bottom:24px">'
-        f'<strong>Summary:</strong> {len(items)} updates across USCIS, SEVP, State Dept, and Federal Register. '
+        f'<strong>Summary:</strong> {len(items)} updates across USCIS, SEVP, State Dept, Federal Register. '
         f'{len(action_items)} items may require immediate attention.'
         '</div>'
         f'{category_sections}'
@@ -116,12 +112,12 @@ def send_report(html_body: str, run_date: str, item_count: int) -> bool:
         logger.error("GMAIL_APP_PASSWORD not set - skipping email")
         return False
 
-    subject = f"[Immigration Intel] Daily Report - {run_date} ({item_count} updates)"
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
+    msg = EmailMessage()
+    msg["Subject"] = f"Immigration Intel - {run_date} - {item_count} updates"
     msg["From"] = gmail_user
     msg["To"] = gmail_to
-    msg.attach(MIMEText(html_body, "html", "utf-8"))
+    msg.set_content("Please view this email in an HTML-capable client.")
+    msg.add_alternative(html_body, subtype="html")
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
