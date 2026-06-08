@@ -88,7 +88,7 @@ def build_html_report(items: list[ClassifiedItem], run_date: str) -> str:
 <body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:20px;color:#212121">
   <div style="background:linear-gradient(135deg,#1a237e,#283593);color:#fff;padding:24px;border-radius:8px;margin-bottom:24px">
     <h1 style="margin:0;font-size:22px">🇺🇸 Immigration Intelligence Report</h1>
-    <p style="margin:8px 0 0;opacity:0.85">{run_date} &nbsp;|&nbsp; {len(items)} new/updated items detected</p>
+    <p style="margin:8px 0 0;opacity:0.85">{run_date} | {len(items)} new/updated items detected</p>
   </div>
 
   {high_priority_section}
@@ -119,7 +119,7 @@ def send_report(html_body: str, run_date: str, item_count: int) -> bool:
         logger.error("GMAIL_APP_PASSWORD not set — skipping email")
         return False
 
-    subject = f"[Immigration Intel] Daily Report — {run_date} ({item_count} updates)"
+    subject = f"[Immigration Intel] Daily Report - {run_date} ({item_count} updates)"
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = gmail_user
