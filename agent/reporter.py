@@ -104,6 +104,7 @@ def build_html_report(items: list[ClassifiedItem], run_date: str) -> str:
 
 
 def send_report(html_body: str, run_date: str, item_count: int) -> bool:
+    import base64
     gmail_user = os.environ.get("GMAIL_FROM", "rafshakirat@gmail.com")
     gmail_to = os.environ.get("GMAIL_TO", "rafshakirat@gmail.com")
     app_password = os.environ.get("GMAIL_APP_PASSWORD")
@@ -112,17 +113,24 @@ def send_report(html_body: str, run_date: str, item_count: int) -> bool:
         logger.error("GMAIL_APP_PASSWORD not set - skipping email")
         return False
 
-    msg = EmailMessage()
-    msg["Subject"] = f"Immigration Intel - {run_date} - {item_count} updates"
-    msg["From"] = gmail_user
-    msg["To"] = gmail_to
-    msg.set_content("Please view this email in an HTML-capable client.")
-    msg.add_alternative(html_body, subtype="html")
+    subject = f"Immigration Intel - {run_date} - {item_count} updates"
+    html_b64 = base64.b64encode(html_body.encode("utf-8")).decode("ascii")
+
+    raw = (
+        f"From: {gmail_user}\r\n"
+        f"To: {gmail_to}\r\n"
+        f"Subject: {subject}\r\n"
+        f"MIME-Version: 1.0\r\n"
+        f"Content-Type: text/html; charset=utf-8\r\n"
+        f"Content-Transfer-Encoding: base64\r\n"
+        f"\r\n"
+        f"{html_b64}\r\n"
+    ).encode("ascii")
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, app_password)
-            server.send_message(msg)
+            server.sendmail(gmail_user, gmail_to, raw)
         logger.info("Report emailed to %s", gmail_to)
         return True
     except Exception as exc:
